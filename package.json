@@ -1,0 +1,17 @@
+{
+  "name": "langgraph-from-scratch",
+  "version": "1.0.0",
+  "description": "Learning LangGraph.js step by step",
+  "type": "module",
+  "scripts": {
+    "probe": "node probe.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/core": "^1.2.1",
+    "@langchain/groq": "^1.3.1",
+    "@langchain/langgraph": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "zod": "^4.4.3"
+  }
+}
