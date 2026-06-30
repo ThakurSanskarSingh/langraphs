@@ -17,7 +17,7 @@ node lessons/01-minimal-graph.mjs
 |---|--------|---------|-------|------|
 | 1 | Minimal graph (no LLM) | State, Node, Edge, START/END, compile, invoke | `notes/01-mental-model.md` | `lessons/01-minimal-graph.mjs` |
 | 2 | State & reducers | Channels, reducers, why state isn't a plain object | `notes/02-state-and-reducers.md` | `lessons/02-state-and-reducers.mjs` |
-| 3 | Conditional edges | Routing / branching | _(next)_ | _(next)_ |
+| 3 | Conditional edges | Routing / branching / loops | `notes/03-conditional-edges.md` | `lessons/03-conditional-edges.mjs` |
 | 4 | First LLM node | Plugging in Groq | _(next)_ | _(next)_ |
 | 5 | Tools + the agent loop | ReAct by hand, then prebuilt | _(next)_ | _(next)_ |
 | 6 | Memory / persistence | Checkpointers, threads | _(next)_ | _(next)_ |
