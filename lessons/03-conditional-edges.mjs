@@ -32,54 +32,72 @@ line("DEMO A: branching (even vs odd)");
   };
   const evenNode = () => ({ label: "EVEN" });
   const oddNode = () => ({ label: "ODD" });
+  const zeroNodeFn = () => ({ label: "ZERO" });
 
   // The router: (state) => a key string. Pure function, no side effects.
-  const route = (s) => (s.number % 2 === 0 ? "isEven" : "isOdd");
+  // Check the MOST SPECIFIC case first — 0 is even, so it must be caught
+  // before the `% 2 === 0` test, or 0 would route to "isEven".
+  const route = (s) =>
+    s.number === 0     ? "isZero" :
+    s.number % 2 === 0 ? "isEven" :
+                         "isOdd";
 
   const app = new StateGraph(State)
     .addNode("ingest", ingest)
     .addNode("evenNode", evenNode)
     .addNode("oddNode", oddNode)
+    .addNode("zeroNode", zeroNodeFn)
     .addEdge(START, "ingest")
     // 3rd arg maps router's returned key -> destination node name:
-    .addConditionalEdges("ingest", route, { isEven: "evenNode", isOdd: "oddNode" })
+    .addConditionalEdges("ingest", route, { isEven: "evenNode", isOdd: "oddNode", isZero: "zeroNode" })
     .addEdge("evenNode", END)
     .addEdge("oddNode", END)
+    .addEdge("zeroNode", END)
     .compile();
 
   console.log("  invoke 4 ->", (await app.invoke({ number: 4 })).label);
   console.log("  invoke 7 ->", (await app.invoke({ number: 7 })).label);
+  console.log("  invoke 0 ->", (await app.invoke({ number: 0 })).label);
 }
 
 // ---------------------------------------------------------------------------
-// DEMO B — LOOPING (the agent skeleton)
-// `increment` adds 1 to count, then a conditional edge decides:
-//   count < 5  -> go BACK to `increment` (loop)
-//   else       -> END
-// Replace "increment" with "call the LLM/tool" and you have an agent.
+// DEMO B — LOOPING + a second branch (Exercise 1).
+// `increment` adds 1 to count. A router then decides:
+//   count < 3  -> loop back to `increment`
+//   else       -> go to the `celebrate` node, then END
+//
+// KEY DISTINCTION:
+//   increment / celebrate  are NODES   -> return a state object, use addNode
+//   router                 is a ROUTER -> returns a key string, use addConditionalEdges
 // ---------------------------------------------------------------------------
-line("DEMO B: looping until a condition is met");
+line("DEMO B: loop until 3, then celebrate");
 {
   const State = Annotation.Root({
     count: Annotation(),
   });
 
-  const increment = (s) => {
+  const increment = (s) => {                 // NODE: returns state
     const next = (s.count ?? 0) + 1;
     console.log("  [increment] count:", s.count ?? 0, "->", next);
     return { count: next };
   };
 
-  // Router that points BACK to the same node to create a loop.
-  const keepGoing = (s) => (s.count < 5 ? "loop" : "stop");
+  const celebrate = (s) => {                 // NODE: returns state
+    console.log("  [celebrate] 🎉 reached", s.count);
+    return {};
+  };
+
+  const router = (s) => (s.count < 3 ? "loop" : "celebrate"); // ROUTER: returns a key
 
   const app = new StateGraph(State)
     .addNode("increment", increment)
+    .addNode("celebrate", celebrate)
     .addEdge(START, "increment")
-    .addConditionalEdges("increment", keepGoing, {
-      loop: "increment", // <-- the loop: route back to the same node
-      stop: END,
+    .addConditionalEdges("increment", router, {
+      loop: "increment",        // <-- the loop: back to the same node
+      celebrate: "celebrate",   // <-- branch out once count hits 3
     })
+    .addEdge("celebrate", END)
     .compile();
 
   const r = await app.invoke({ count: 0 });
